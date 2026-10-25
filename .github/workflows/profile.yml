@@ -1,0 +1,41 @@
+name: Update profile cards
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Generate stats card
+        uses: stats-organization/github-readme-stats-action@2c498845f71017821efaad14293ebc736156ef21
+        with:
+          card: stats
+          options: "username=${{ github.repository_owner }}&show_icons=true&hide_rank=true&include_all_commits=true&hide=prs,issues,contribs&card_width=320&custom_title=GitHub%20Stats&bg_color=000000&border_color=262626&title_color=ffffff&icon_color=a3a3a3&text_color=d4d4d4"
+          path: dist/stats.svg
+          token: ${{ secrets.STATS_TOKEN }}
+          fail_on_error: true
+
+      - name: Generate contribution graph
+        uses: Platane/snk@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/snake-dark.svg?color_snake=#ffffff&color_dots=#161616,#3a3a3a,#6b6b6b,#a3a3a3,#ffffff
+            dist/snake-light.svg?color_snake=#000000&color_dots=#ebedf0,#c4c4c4,#8a8a8a,#525252,#000000
+
+      - name: Publish to output branch
+        uses: crazy-max/ghaction-github-pages@v5
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
